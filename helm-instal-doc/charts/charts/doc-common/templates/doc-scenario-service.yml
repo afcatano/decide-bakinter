@@ -1,0 +1,108 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dbgene
+  name: scenario-service
+spec:
+  selector:
+    matchLabels:
+       app: dbgene
+       deploymentconfig: scenario-service
+  template:
+    metadata:
+      labels:
+        app: dbgene
+        deploymentconfig: scenario-service
+    spec:
+      containers:
+        - env:
+          - name: JAVA_TOOL_OPTIONS
+           # value: {{ .Values.scenarioService.javaToolOptions }}
+          - name: SPRING_DATA_MONGODB_HOST
+            value: mongo
+          - name: SPRING_DATA_MONGODB_PORT
+            value: '27017'
+          - name: SERVICES_EXECUTION_HOST
+            value: execution-service
+          - name: SERVICES_EXECUTION_PORT
+            value: '8080'
+          - name: SERVICES_WEB_HOST
+            value: web
+          - name: SERVICES_WEB_PORT
+            value: '8080'
+          - name: SERVICES_BACKEND_HOST
+            value: backend-service
+          - name: SERVICES_BACKEND_PORT
+            value: '8080'
+          - name: SERVICES_GATEWAY_HOST
+            value: gateway-service
+          - name: SERVICES_GATEWAY_PORT
+            value: '8080'
+          - name: SERVICES_SCENARIO_HOST
+            value: scenario-service
+          - name: SERVICES_SCENARIO_PORT
+            value: '8080'
+          - name: SERVICES_DATA_HOST
+            value: data-service
+          - name: SERVICES_DATA_PORT
+            value: '8080'
+          - name: SERVICES_PERMISSION_MONGODB_HOST
+            value: mongo
+          - name: SERVICES_PERMISSION_MONGODB_PORT
+            value: '27017'
+          - name: SERVICES_PERMISSION_MONGODB_USERNAME
+            value: permission
+          - name: SERVICES_PERMISSION_MONGODB_PASSWORD
+            value: permission
+          - name: SERVICES_PERMISSION_MONGODB_DATABASE
+            value: permission-db
+          - name: WEBSOCKET_ALLOWEDORIGIN
+           # value: https://{{ .Release.Namespace }}.{{ .Values.global.host }}
+          - name: KEYCLOAK_AUTH_SERVER_URL
+            value: http://keycloak:8080/auth
+          - name: SERVICES_SESSIONTRACKING_MONGODB_HOST
+            value: mongo
+          - name: SERVICES_DOCUMENTATION_HOST
+            value: documentation-service
+          - name: SERVICES_DOCUMENTATION_PORT
+            value: '3000'
+
+          image: quay.io/afcatano/knapsack-scenario-service:v1.0.0
+          imagePullPolicy: Always
+          name: scenario-service
+          resources:
+            limits:
+              memory: 1500Mi
+            requests:
+              cpu: 50m
+              memory: 1500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      #imagePullSecrets:
+       # - name: {{ .name }}
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dbgene
+  name: scenario-service
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: dbgene
+    deploymentconfig: scenario-service
+  sessionAffinity: None
+  type: ClusterIP

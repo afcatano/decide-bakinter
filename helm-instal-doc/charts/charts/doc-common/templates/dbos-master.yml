@@ -1,0 +1,135 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dbos
+  name: dbos-master
+spec:
+  selector:
+    matchLabels:
+      app: dbos
+      deploymentconfig: dbos-master
+  template:
+    metadata:
+      labels:
+        app: dbos
+        deploymentconfig: dbos-master
+    spec:
+      containers:
+        - env:
+           # - name: SPRING_PROFILES_ACTIVE
+           #   value: basicAuth
+            - name: JAVA_OPTS
+              value: -Xmx500m -Xms10m
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_USERNAME
+              value: guest
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: guest
+            - name: SPRING_DATA_MONGODB_HOST
+              value: mongo
+            - name: SPRING_DATA_MONGODB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: mongodb-dbos-user
+                  name: mongo
+            - name: SPRING_DATA_MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongodb-dbos-password
+                  name: mongo
+            #                - name: SPRING_DATA_MONGODB_DATABASE
+            #                  valueFrom:
+            #                    secretKeyRef:
+            #                      key: mongodb-dbos-database
+            #                      name: mongo
+            - name: SPRING_DATA_MONGODB_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-initdb-root-username
+                  name: mongo
+            - name: SPRING_DATA_MONGODB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo-initdb-root-password
+                  name: mongo
+            - name: KEYCLOAK_AUTHSERVERURL
+              value: http://keycloak:8080/auth
+            - name: KEYCLOAK_REALM
+              value: gene
+            - name: KEYCLOAK_RESOURCE
+              value: optimserver
+            - name: OPTIMSERVER_JWTKEY
+              value: 4GvofztuEc0zf2lmCzd5FGBR8cXlSpJM      
+          image: quay.io/afcatano/knapsack-dbos-master:v1.0.0
+          imagePullPolicy: Always
+          name: dbos-master
+          resources:
+              limits:
+                memory: 500Mi
+              requests:
+                cpu: 50m
+                memory: 500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+   #   imagePullSecrets:
+    #  - name: dbgene-demos-registry.decisionbrain.cloud
+   
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: dbos-master-web
+#spec:
+#  entryPoints:
+#    - web
+#  routes:
+#    - kind: Rule
+#      match: Host(`dbos-master-{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      middlewares:
+#        - name: redirect
+#          namespace: kube-system
+#      services:
+#        - name: dbos-master
+#          port: 8080
+#---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: dbos-master-websecure
+#spec:
+#  entryPoints:
+#    - websecure
+#  routes:
+#    - kind: Rule
+#      match: Host(`dbos-master-{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      services:
+#        - name: dbos-master
+#          port: 8080
+#  tls: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dbos
+  name: dbos-master
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+      app: dbos
+      deploymentconfig: dbos-master
+  sessionAffinity: None
+  type: ClusterIP

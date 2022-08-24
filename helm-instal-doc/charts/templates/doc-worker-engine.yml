@@ -1,0 +1,43 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: workers
+  name: capacity-planning-engine-worker
+spec:
+  selector:
+    matchLabels:
+      app: workers
+      deploymentconfig: capacity-planning-engine-worker
+  template:
+    metadata:
+      labels:
+        app: workers
+        deploymentconfig: capacity-planning-engine-worker
+    spec:
+      containers:
+        - env:
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_USERNAME
+              value: guest
+            - name: SPRING_RABBITMQ_PASSWORD
+              value: guest
+            - name: JAVA_TOOL_OPTIONS
+              value: -Xmx4000m -Xms500m  -XX:+CrashOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/carhartt-mso-checker-worker-heap-dump.hprof
+          image: quay.io/afcatano/knapsack-engine-worker:v1.0.0
+          imagePullPolicy: Always
+          name: capacity-planning-engine-worker
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      #imagePullSecrets:
+      #- name: dbgene-demos-registry.decisionbrain.cloud
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+

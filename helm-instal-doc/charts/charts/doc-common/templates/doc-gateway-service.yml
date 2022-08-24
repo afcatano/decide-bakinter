@@ -1,0 +1,118 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dbgene
+  name: gateway-service
+spec:
+  selector:
+    matchLabels:
+      app: dbgene
+      deploymentconfig: gateway-service
+  template:
+    metadata:
+      labels:
+        app: dbgene
+        deploymentconfig: gateway-service
+    spec:
+      containers:
+        - env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -Xmx1024m
+            - name: SERVICES_EXECUTION_HOST
+              value: execution-service
+            - name: SERVICES_EXECUTION_PORT
+              value: '8080'
+            - name: SERVICES_WEB_HOST
+              value: web
+            - name: SERVICES_WEB_PORT
+              value: '8080'
+            - name: SERVICES_BACKEND_HOST
+              value: backend-service
+            - name: SERVICES_BACKEND_PORT
+              value: '8080'
+            - name: SERVICES_GATEWAY_HOST
+              value: gateway-service
+            - name: SERVICES_GATEWAY_PORT
+              value: '8080'
+            - name: SERVICES_SCENARIO_HOST
+              value: scenario-service
+            - name: SERVICES_SCENARIO_PORT
+              value: '8080'
+            - name: SERVICES_DATA_HOST
+              value: data-service
+            - name: SERVICES_DATA_PORT
+              value: '8080'
+            - name: KEYCLOAK_AUTH_SERVER_URL
+              value: http://keycloak:8080/auth
+          image: quay.io/afcatano/knapsack-gateway-service:v1.0.0
+          imagePullPolicy: Always
+          name: gateway-service
+          resources:
+            limits:
+              memory: 500Mi
+            requests:
+              cpu: 50m
+              memory: 500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      #imagePullSecrets:
+      #- name: dbgene-demos-registry.decisionbrain.cloud
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: doc-web
+#spec:
+#  entryPoints:
+#    - web
+#  routes:
+#    - kind: Rule
+#      match: Host(`{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      middlewares:
+#        - name: redirect
+#          namespace: kube-system
+#      services:
+#        - name: gateway-service
+#          port: 8080
+#---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: doc-websecure
+#spec:
+#  entryPoints:
+#    - websecure
+#  routes:
+#    - kind: Rule
+#      match: Host(`{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      services:
+#        - name: gateway-service
+#          port: 8080
+#  tls: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dbgene
+  name: gateway-service
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: dbgene
+    deploymentconfig: gateway-service
+  sessionAffinity: None
+  type: ClusterIP

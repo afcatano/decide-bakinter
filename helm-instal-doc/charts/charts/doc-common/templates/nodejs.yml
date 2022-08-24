@@ -1,0 +1,93 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nodejs
+  name: nodejs-web-console
+spec:
+  selector:
+    matchLabels:
+      app: nodejs
+      deploymentconfig: nodejs-web-console
+  template:
+    metadata:
+      labels:
+        app: nodejs
+        deploymentconfig: nodejs-web-console
+    spec:
+      containers:
+        - image: pvermeyden/nodejs-hello-world:a1e8cf1edcc04e6d905078aed9861807f6da0da4
+          imagePullPolicy: Always
+          name: nodejs-web-console
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nodejs-web-console
+  namespace: testnodejs
+  annotations:
+    ingress.kubernetes.io/affinity: cookie
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    #ingress.kubernetes.io/backend-protocol: HTTPS
+    #ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/session-cookie-hash: sha1
+    ingress.kubernetes.io/session-cookie-name: route
+    ingress.kubernetes.io/session-cookie-path: /
+    ingress.kubernetes.io/use-regex: "true"
+    kubernetes.io/ingress.class: nginx
+    meta.helm.sh/release-namespace: commons
+    nginx.ingress.kubernetes.io/affinity: cookie
+   # nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+   # nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/session-cookie-hash: sha1
+    nginx.ingress.kubernetes.io/session-cookie-name: route
+    nginx.ingress.kubernetes.io/session-cookie-path: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+  - host: nodejs.192.168.222.17
+    http:
+      paths:
+      - backend:
+          service:
+            name: nodejs-web-console
+            port:
+              number: 80
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - nodejs.192.168.222.17
+
+status:
+  loadBalancer:
+    ingress:
+    - hostname: a26069597a0144f3484ffe41681a4b36-5eade8d8f81ab96f.elb.us-east-2.amazonaws.com
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nodejs
+  name: nodejs-web-console
+spec:
+  ports:
+    - name: 80-tcp
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: nodejs
+    deploymentconfig: nodejs-web-console
+  sessionAffinity: None
+  type: ClusterIP
