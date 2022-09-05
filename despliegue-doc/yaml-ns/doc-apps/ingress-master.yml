@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-dbos-master
+  annotations:
+    ingress.kubernetes.io/affinity: cookie
+    #nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    #ingress.kubernetes.io/backend-protocol: HTTPS
+    #ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/session-cookie-hash: sha1
+    ingress.kubernetes.io/session-cookie-name: route
+    ingress.kubernetes.io/session-cookie-path: /
+    ingress.kubernetes.io/use-regex: "true"
+    kubernetes.io/ingress.class: nginx
+    meta.helm.sh/release-namespace: commons
+    nginx.ingress.kubernetes.io/affinity: cookie
+    #nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    #nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/session-cookie-hash: sha1
+    nginx.ingress.kubernetes.io/session-cookie-name: route
+    nginx.ingress.kubernetes.io/session-cookie-path: /
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";        
+spec:
+  rules:
+  - host: master.doclab-dev.com
+    http:
+      paths:
+      
+      - backend:
+          service:
+            name: dbos-master
+            port:
+              number: 8080
+        path: /*
+        pathType: ImplementationSpecific

@@ -1,0 +1,110 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dbgene
+  name: data-service
+spec:
+  selector:
+    matchLabels:
+      app: dbgene
+      deploymentconfig: data-service
+  template:
+    metadata:
+      labels:
+        app: dbgene
+        deploymentconfig: data-service
+    spec:
+      containers:
+        - name: data-service
+          image: quay.io/afcatano/knapsack-data-service:v1.0.0
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_TOOL_OPTIONS
+             # value: {{ .Values.dataService.javaToolOptions }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: keycloak
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/data_server?reWriteBatchedInserts=true
+            - name: SPRING_DATASOURCE_USERNAME
+              value: data_server
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: data_server
+            - name: SPRING_DATA_MONGODB_HOST
+              value: mongo # Used by the actuator for health check
+            - name: SPRING_DATA_MONGODB_PORT
+              value: '27017'
+            - name: KEYCLOAK_AUTH_SERVER_URL
+              value: http://keycloak:8080/auth
+            - name: SERVICES_PERMISSION_MONGODB_HOST
+              value: mongo
+            - name: SERVICES_PERMISSION_MONGODB_PORT
+              value: '27017'
+            - name: SERVICES_PERMISSION_MONGODB_USERNAME
+              value: permission
+            - name: SERVICES_PERMISSION_MONGODB_PASSWORD
+              value: permission
+            - name: SERVICES_PERMISSION_MONGODB_DATABASE
+              value: permission-db
+            - name: SERVICES_DATA_HOST
+              value: data-service
+            - name: SERVICES_DATA_PORT
+              value: '8080'
+            - name: SERVICES_SCENARIO_HOST
+              value: scenario-service
+            - name: SERVICES_SCENARIO_PORT
+              value: '8080'
+            - name: SERVICES_EXECUTION_HOST
+              value: execution-service
+            - name: SERVICES_EXECUTION_PORT
+              value: '8080'
+            - name: SERVICES_BACKEND_HOST
+              value: backend-service
+            - name: SERVICES_BACKEND_PORT
+              value: '8080'
+            - name: SERVICES_GATEWAY_HOST
+              value: gateway-service
+            - name: SERVICES_GATEWAY_PORT
+              value: '8080'
+            - name: SERVICES_WEB_HOST
+              value: web
+            - name: SERVICES_WEB_PORT
+              value: '8080'
+            - name: WEBSOCKET_ALLOWEDORIGIN
+              #value: https://{{ .Release.Namespace }}.{{ .Values.global.host }}
+          resources:
+            limits:
+              memory: 1500Mi
+            requests:
+              cpu: 50m
+              memory: 1500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+ 
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dbgene
+  name: data-service
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: dbgene
+    deploymentconfig: data-service
+  sessionAffinity: None
+  type: ClusterIP

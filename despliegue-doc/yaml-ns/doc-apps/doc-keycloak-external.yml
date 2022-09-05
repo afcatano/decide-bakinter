@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: infra
+  name: keycloak
+spec:
+  type: ExternalName
+  externalName: keycloak.doc-infra.svc.cluster.local
+  ports:
+    - port: 8080

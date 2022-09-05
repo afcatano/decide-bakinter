@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: infra
+  name: keycloak
+spec:
+  selector:
+    matchLabels:
+      app: infra
+      deploymentconfig: keycloak
+  template:
+    metadata:
+      labels:
+        app: infra
+        deploymentconfig: keycloak
+    spec:
+      containers:
+        - env:
+           # - name: PROXY_ADDRESS_FORWARDING
+           #   value: 'true'
+            - name: CLIENT_ID
+              value: gene-web
+            - name: INCLUDE_GROUPS
+              value: GENE_USERS
+            - name: RABBIT_USERNAME
+              value: guest
+            - name: RABBIT_PASSWORD
+              value: guest
+            - name: DB_VENDOR
+              value: postgres
+            - name: DB_ADDR
+              value: postgres
+            - name: DB_DATABASE
+              value: keycloak
+            - name: DB_USER
+              value: keycloak
+            - name: DB_PASSWORD
+              value: keycloak
+            - name: KEYCLOAK_USER
+              value: admin
+            - name: KEYCLOAK_PASSWORD
+              value: gene
+            - name: KEYCLOAK_FRONTEND_URL
+              value: http://keycloak.doclab-dev.com/auth # Enable backend services access to keycloak, this set forceBackendUrlToFrontendUrl to false
+            - name: KEYCLOAK_IMPORT
+              value: /tmp/realm.json
+          image: quay.io/afcatano/knapsack-keycloak:v1.0.0
+          imagePullPolicy: Always
+          name: keycloak
+          resources:
+            limits:
+              memory: 600Mi
+            requests:
+              cpu: 50m
+              memory: 600Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /tmp/realm.json
+              name: provisioning-data
+              subPath: realm.json
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 493
+            name: keycloak-provisioning-data
+          name: provisioning-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: infra
+  name: keycloak
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: infra
+    deploymentconfig: keycloak
+  sessionAffinity: None
+  type: ClusterIP
