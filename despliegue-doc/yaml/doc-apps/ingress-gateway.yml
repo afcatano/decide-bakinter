@@ -24,7 +24,7 @@ metadata:
       more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";    
 spec:
   rules:
-  - host: keycloak.doclab-dev.com
+  - host: web.doclab-dev.com
     http:
       paths:
       - backend:

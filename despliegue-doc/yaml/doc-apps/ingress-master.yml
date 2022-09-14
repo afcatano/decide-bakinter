@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-gateway
+  name: ingress-dbos-master
   annotations:
     ingress.kubernetes.io/affinity: cookie
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    #nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     #ingress.kubernetes.io/backend-protocol: HTTPS
     #ingress.kubernetes.io/secure-backends: "true"
     ingress.kubernetes.io/session-cookie-hash: sha1
@@ -21,33 +21,17 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-path: /
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";    
+      more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";        
 spec:
   rules:
-  - host: keycloak.doclab-dev.com
+  - host: master.doclab-dev.com
     http:
       paths:
+      
       - backend:
           service:
-            name: keycloak
+            name: dbos-master
             port:
               number: 8080
-        path: /auth/*
+        path: /*
         pathType: ImplementationSpecific
-      - backend:
-          service:
-            name: keycloak
-            port:
-              number: 8080
-        path: /auth/realms/gene/protocol/openid-connect/3p-cookies/step1.html
-        pathType: ImplementationSpecific
-      - backend:
-          service:
-            name: gateway-service
-            port:
-              number: 8080
-        path: /
-        pathType: ImplementationSpecific
-#  tls:
-#  - hosts:
-#    - gateway.doclab-dev.com

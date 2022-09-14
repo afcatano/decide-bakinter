@@ -1,0 +1,95 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dbos
+  name: dbos-web-console
+spec:
+  selector:
+    matchLabels:
+      app: dbos
+      deploymentconfig: dbos-web-console
+  template:
+    metadata:
+      labels:
+        app: dbos
+        deploymentconfig: dbos-web-console
+    spec:
+      containers:
+        - env:
+            - name: OPTIMSERVER_MASTER_URL
+              value: http://dbos-master:8080/
+            - name: OPTIMSERVER_MASTER_DOC_URL
+              #value: http://dbos-documentation:8080/
+            - name: KEYCLOAK_URL
+              value: http://web.doclab-dev.com/
+            - name: KEYCLOAK_REALM  
+              value: gene
+           # - name: SPRING_PROFILES_ACTIVE
+           #   value: basicAuth
+          image: quay.io/afcatano/knapsack-dbos-web-console:v1.0.0
+          imagePullPolicy: Always
+          name: dbos-web-console
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      #imagePullSecrets:
+      #- name: dbgene-demos-registry.decisionbrain.cloud
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: dbos-web-console-web
+#spec:
+#  entryPoints:
+#    - web
+#  routes:
+#    - kind: Rule
+#      match: Host(`dbos-web-console-{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      middlewares:
+#        - name: redirect
+#          namespace: kube-system
+#      services:
+##        - name: dbos-web-console
+#          port: 8080
+#---
+#apiVersion: traefik.containo.us/v1alpha1
+#kind: IngressRoute
+#metadata:
+#  name: dbos-web-console-websecure
+#spec:
+#  entryPoints:
+#    - websecure
+#  routes:
+#    - kind: Rule
+#      match: Host(`dbos-web-console-{{ .Release.Namespace }}.{{ .Values.global.host }}`) && PathPrefix(`/`)
+#      services:
+#        - name: dbos-web-console
+#          port: 8080
+#  tls: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dbos
+  name: dbos-web-console
+spec:
+  ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: dbos
+    deploymentconfig: dbos-web-console
+  sessionAffinity: None
+  type: ClusterIP

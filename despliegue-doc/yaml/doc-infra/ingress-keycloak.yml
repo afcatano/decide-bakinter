@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-gateway
+  name: ingress-keycloak
   annotations:
     ingress.kubernetes.io/affinity: cookie
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    #nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     #ingress.kubernetes.io/backend-protocol: HTTPS
     #ingress.kubernetes.io/secure-backends: "true"
     ingress.kubernetes.io/session-cookie-hash: sha1
@@ -21,10 +21,10 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-path: /
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";    
+      more_set_headers "Content-Security-Policy: frame-ancestors 'self' *.doclab-dev.com;";        
 spec:
   rules:
-  - host: keycloak.doclab-dev.com
+  - host: web.doclab-dev.com
     http:
       paths:
       - backend:
@@ -48,6 +48,3 @@ spec:
               number: 8080
         path: /
         pathType: ImplementationSpecific
-#  tls:
-#  - hosts:
-#    - gateway.doclab-dev.com
